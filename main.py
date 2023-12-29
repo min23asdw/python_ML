@@ -1,7 +1,6 @@
 from flask import Flask
 from flask_socketio import SocketIO, emit
 import base64
-import io
 import cv2
 import numpy as np
 import tensorflow as tf
@@ -23,14 +22,10 @@ class_labels = ['dewberry_blue', 'creco','Ahh','rollercoaster_cheese','bengbeng'
 frame_counter = 0
 cached_prediction = None
 
+
 def preprocess_image(image_data):
     try:
         image = cv2.imdecode(np.frombuffer(base64.b64decode(image_data), dtype=np.uint8), cv2.IMREAD_COLOR)
-
-        if image is None or image.size == 0:
-            print("Invalid or empty image")
-            return None
-
         image = cv2.resize(image, (224, 224))
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         image = image / 255.0  # Normalize the image
@@ -38,35 +33,44 @@ def preprocess_image(image_data):
     except Exception as e:
         print(f"Error processing image: {e}")
         return None
-# def preprocess_image(image_data):
-#     image = cv2.imdecode(np.frombuffer(base64.b64decode(image_data), dtype=np.uint8), cv2.IMREAD_COLOR)
-#     image = cv2.resize(image, (224, 224))
-#     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-#     image = image / 255.0  # Normalize the image
-#     return np.expand_dims(image, axis=0)
+
 
 def predict_image(image_data):
     preprocessed_image = preprocess_image(image_data)
-    prediction = model.predict(preprocessed_image)
-    predicted_class = class_labels[np.argmax(prediction)]
-    return predicted_class
+    if preprocessed_image is not None:
+        prediction = model.predict(preprocessed_image)
+        predicted_class = class_labels[np.argmax(prediction)]
+        return predicted_class
+    else:
+        return None
+
 
 @socketio.on('image')
-def handle_image(data):
+def handle_image_stream_event(data):
+    handle_image_stream(data)
+ 
+def handle_image_stream(data):
     global frame_counter, cached_prediction
 
-    frame_counter += 1
+    image_data = data['image']
     print(f"Received image - Frame count: {frame_counter}")
-    if frame_counter >= 10:
-        image_data = data['image']
+    frame_counter += 1
+
+    if frame_counter % 5 == 0:  # Only predict every 10 frames
         cached_prediction = predict_image(image_data)
-        emit('prediction', {'text': cached_prediction})
+        socketio.emit('prediction', {'text': cached_prediction})
         print(f"Prediction sent - Predicted text: {cached_prediction}")
-        frame_counter = 0
     else:
-        if cached_prediction is not None:
-            emit('prediction', {'text': cached_prediction})
-            print(f"Using cached prediction - Predicted text: {cached_prediction}")
+        # Send cached prediction back to Flutter
+        socketio.emit('prediction', {'text': cached_prediction})
+        print(f"Sending cached prediction - Predicted text: {cached_prediction}")
+
+def show_image(image_data):
+    image = cv2.imdecode(np.frombuffer(base64.b64decode(image_data), dtype=np.uint8), cv2.IMREAD_COLOR)
+    cv2.imshow("Received Image", image)
+    cv2.waitKey(1)
+
+
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=80, debug=True)
