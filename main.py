@@ -4,6 +4,7 @@ import base64
 import cv2
 import numpy as np
 import tensorflow as tf
+from PIL import Image
 
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -28,6 +29,7 @@ def preprocess_image(image_data):
         image = cv2.imdecode(np.frombuffer(base64.b64decode(image_data), dtype=np.uint8), cv2.IMREAD_COLOR)
         image = cv2.resize(image, (224, 224))
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # show_image(image)
         image = image / 255.0  # Normalize the image
         return np.expand_dims(image, axis=0)
     except Exception as e:
@@ -38,9 +40,19 @@ def preprocess_image(image_data):
 def predict_image(image_data):
     preprocessed_image = preprocess_image(image_data)
     if preprocessed_image is not None:
-        prediction = model.predict(preprocessed_image)
-        predicted_class = class_labels[np.argmax(prediction)]
-        return predicted_class
+        predictions = model.predict(preprocessed_image)
+        # predictions = predict_image(image_data)
+        top_classes = np.argsort(predictions)[0, ::-1][:5]
+        confidence_scores = predictions[0, top_classes]
+        confidence_scores_percent = confidence_scores * 100 / np.sum(confidence_scores)
+        # Display the results
+        textdis = {}
+        for i in range(5):
+            textdis[i] = f"{class_labels[top_classes[i]]}:{confidence_scores_percent[i]:.2f}%"
+        # print(" ".join(textdis))            
+        predict_text = "#".join(textdis.values())
+        # predicted_class = class_labels[np.argmax(prediction)]
+        return predict_text
     else:
         return None
 
@@ -59,16 +71,17 @@ def handle_image_stream(data):
     if frame_counter % 5 == 0:  # Only predict every 10 frames
         cached_prediction = predict_image(image_data)
         socketio.emit('prediction', {'text': cached_prediction})
+          
         print(f"Prediction sent - Predicted text: {cached_prediction}")
     else:
         # Send cached prediction back to Flutter
         socketio.emit('prediction', {'text': cached_prediction})
         print(f"Sending cached prediction - Predicted text: {cached_prediction}")
 
-def show_image(image_data):
-    image = cv2.imdecode(np.frombuffer(base64.b64decode(image_data), dtype=np.uint8), cv2.IMREAD_COLOR)
-    cv2.imshow("Received Image", image)
-    cv2.waitKey(1)
+def show_image(image):
+    img = Image.fromarray(image)
+    img.show()
+
 
 
 
