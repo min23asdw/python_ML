@@ -9,7 +9,7 @@ app = Flask(__name__)
 socketio = SocketIO(app)
 
 # Load your Keras model
-model = tf.keras.models.load_model('../model/model_forAPP.h5', compile=False)
+model = tf.keras.models.load_model('../model/model90_forAPP.h5', compile=False)
 model.compile(
     optimizer=tf.keras.optimizers.Adam(learning_rate=1e-5),
     loss=tf.keras.losses.CategoricalCrossentropy(from_logits=True),
@@ -17,7 +17,7 @@ model.compile(
 )
 
 # Class labels for your model
-class_labels = ['dewberry_blue', 'creco','Ahh','rollercoaster_cheese','bengbeng','bento','deno_stone','chocopie','rollercoaster_spicy','kitkat','lays_3','lays_cheese','lays_original','dewberry_red','lay_green','ff','oreo','pringles_green','lotus','marujo_red','marujo_green','tilli_indigo','tasto_spicy','tasto_honey','snackjack_chicken','snackjack_saltpepper','tawan_Larb','snackjack_shell','tilli_blue','tilli_red','voice_mocha','yupi_fruit','twistko','voice_choco','voice_waffle','null']
+class_labels =  ['null', 'beng-beng', 'Euro Choco Pie', 'Deno Choco Stone', 'Dewberry Blueberry', 'Dewberry Strawberry', 'Euro Creco', 'FF Tomato Flavoured Cracker', 'Lays Nori Seaweed', 'Lays Original', 'Lays Chessy Twist', 'Lays Mieng Kam Krob Ros', 'Lotus Korean Barbecue Snack', 'Marucho Chicken Flavour', 'Marucho Shrimp Flavour', 'Oreo Original', 'Pringles Sour Cream & Onion', 'Roller Coaster Chicken Hot & Spicy', 'Roller Coaster Cheese', 'KitKat', 'Snack Jack Spicy Volcano Scallop Flavor', 'Snack Jack Salt & Chilli Prawn Flavor', 'Snack Jack Chicken Steak Flavor', 'Tasto Salt & Sour', 'Tasto Barbecue Spicy', 'Tawan Larb Saab', 'Tivoli Twin Jumbo Milk Flavor', 'Tivoli Twin Jumbo Chocolate Flavor', 'Tivoli Twin Jumbo Vanilla Flavor', 'Twistko', 'Voize Waffle Cookies & Cream', 'Voize Waffle Choco Mocca', 'Voize Waffle Choco Crispy', 'Yupi Fruit Party', 'Rice topped with Stir-Fried Basil with Minced Pork', 'Thai Omelet with Rice', 'Sponsor Electrolyte Original Flavoured', 'Minute Maid Pulpy', 'Magic Farm Coconut Juice', 'Butter Bun', 'Chocolate & Strawberry Wafer Roll Sticks', 'Mango Sticky Rice', 'Butter Bread with Dried Shredded Pork', 'Foi Thong Bun', 'Cream Horn Bread', 'Soft Cookie Brownie', 'Ahh Richeese', 'Bento Sweet & Spicy', 'Birdy espresso', 'Crystal Drinking Water', 'M-150', 'Kratingdaeng Extra Zinc']
 
 # Global variables for prediction
 frame_counter = 0
